@@ -149,6 +149,9 @@ def play(first_guess=None, answer=None, optimal_guess=True,
 
     optimal_guess: boolean. if first_guess is not provided, 
                    this variable controls the generate_first_guess() behavior.
+    to_print:      boolean. show the solver step-by-step or not.
+    show_zh:       boolean. if to_print is set to True, this variable determines
+                   whether to print the Chinese of the guessed word or not.
     """
 
     if first_guess is None:
@@ -173,3 +176,11 @@ all_next_guess = pickle.load(open(NEXT_GUESS_DICT_FILE, 'rb'))
 df_answer = df_all_words[df_all_words['in_answers'] == True]
 
 all_patterns = generate_all_patterns()
+
+
+if __name__ == '__main__':
+    best_start = input('use the best first guess? (y/n) ')
+    if best_start.lower == 'y':
+        play(optimal_guess=True)
+    else:
+        play(optimal_guess=False)
