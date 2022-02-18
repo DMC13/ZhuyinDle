@@ -91,7 +91,7 @@ def brute_solve(guess, answer, prev_result=None,
 
     print(f'\n#{num_attempt} guess:') if to_print else ''
     if to_print:
-        text = '  '.join(guess)
+        text = ' '.join(guess)
         text += ' ' + df_all_words[df_all_words['zhuyin'] ==
                                    guess].iloc[0]['word'] if show_zh else ''
         print(text)
@@ -180,7 +180,7 @@ all_patterns = generate_all_patterns()
 
 if __name__ == '__main__':
     best_start = input('use the best first guess? (y/n) ')
-    if best_start.lower == 'y':
+    if best_start.lower() == 'y':
         play(optimal_guess=True)
     else:
         play(optimal_guess=False)
