@@ -1,3 +1,4 @@
+# coding: utf-8
 import os
 import pickle
 import itertools
@@ -33,12 +34,11 @@ def matching(guess, answer):
 
     matching mechanism:
     1. finding CORRECT spots
-    2. search the not-correct letters, in the not-correct spots of the answer:
-       1) if exist, the letter it is MISPLACED
+    2. search the not-correct letters in not-correct spots of the answer:
+       1) if exist, the letter is MISPLACED
        2) if the letter does not exist in the not-correct spots of the answer,
           the letter is EXCLUDED
     """
-
     not_used = [c for c in answer]
     matching_result = ['' for _ in range(5)]
 
@@ -55,7 +55,7 @@ def matching(guess, answer):
                 matching_result[i] = 'M'
                 not_used.remove(guess[i])
 
-            # EXCLUDED ⬜️
+            # EXCLUDED ⬜
             else:
                 matching_result[i] = 'X'
 
@@ -63,8 +63,7 @@ def matching(guess, answer):
 
 
 def pattern_to_emoji(pattern, print_it=True):
-    """ convert the pattern to color emojis """
-
+    """ convert the pattern to color emojis. """
     color_map = {"C": "🟩", "M": "🟨", "X": "⬛️"}
 
     emojis = list()
@@ -88,7 +87,7 @@ def generate_all_patterns():
 
 def brute_solve(guess, answer, prev_result=None,
                 num_attempt=1, to_print=True, show_zh=True):
-
+    """ a recursive function to generate optimal next guess. """
     print(f'\n#{num_attempt} guess:') if to_print else ''
     if to_print:
         text = ' '.join(guess)
@@ -100,7 +99,7 @@ def brute_solve(guess, answer, prev_result=None,
 
     # if found the answer
     if pattern == ('C', 'C', 'C', 'C', 'C'):
-        print(f'\nsolved! attempt =', num_attempt) if to_print else ''
+        print(f'\nsolved! attempt = {num_attempt}\n') if to_print else ''
         return num_attempt
 
     # get possible answers that matched the pattern
@@ -130,15 +129,16 @@ def brute_solve(guess, answer, prev_result=None,
 # Simulator
 #########################
 
-def generate_first_guess(optimal=False):
-    if optimal:
-        return df_all_words.sort_values(by=['entropy'],
-                                        ascending=False).iloc[0]['zhuyin']
+def generate_first_guess(optimal_guess=False):
+    """ select and return a first guess word. """
+    if optimal_guess:
+        return 'ㄉㄥㄌㄨㄣ'
     else:
         return df_all_words.sample().iloc[0]['zhuyin']
 
 
 def generate_answer():
+    """ select and return an answer randomly. """
     return df_answer.sample().iloc[0]['zhuyin']
 
 
@@ -150,37 +150,47 @@ def play(first_guess=None, answer=None, optimal_guess=True,
     optimal_guess: boolean. if first_guess is not provided, 
                    this variable controls the generate_first_guess() behavior.
     to_print:      boolean. show the solver step-by-step or not.
-    show_zh:       boolean. if to_print is set to True, this variable determines
+    show_zh:       boolean. if to_print is True, this variable determines
                    whether to print the Chinese of the guessed word or not.
     """
-
     if first_guess is None:
-        first_guess = generate_first_guess(optimal=optimal_guess)
+        first_guess = generate_first_guess(optimal_guess=optimal_guess)
     if answer is None:
         answer = generate_answer()
 
-    ans = answer
-    ans += ' ' + df_answer[df_answer['zhuyin'] ==
-                           answer].iloc[0]['word'] if show_zh else answer
     if to_print:
-        print('注音dle:', ans)
+        # print the answer before solving
+        ans2print = answer
+        if show_zh:
+            ans2print += ' ' + \
+                df_answer[df_answer['zhuyin'] == answer].iloc[0]['word']
+        print('\n注音dle:', ans2print)
+
     num_attempt = brute_solve(first_guess, answer,
                               to_print=to_print, show_zh=show_zh)
 
     return num_attempt
 
 
-df_all_words = pd.read_pickle(ALL_WORDS_ENTROPY_FILE)
-all_next_guess = pickle.load(open(NEXT_GUESS_DICT_FILE, 'rb'))
+def ask_mode_then_play():
+    best_start = input('\nuse the best first guess? (y/n) ')
+    if best_start.lower() == 'y':
+        # use the optimal first guess word
+        play(optimal_guess=True)
+    else:
+        # randomly generate a first guess word
+        play(optimal_guess=False)
 
+
+# load solver files, initialize default variables
+try:
+    df_all_words = pd.read_pickle(ALL_WORDS_ENTROPY_FILE)
+    all_next_guess = pickle.load(open(NEXT_GUESS_DICT_FILE, 'rb'))
+except:
+    raise FileNotFoundError('entropy or next guess map file not found.')
 df_answer = df_all_words[df_all_words['in_answers'] == True]
-
 all_patterns = generate_all_patterns()
 
 
 if __name__ == '__main__':
-    best_start = input('use the best first guess? (y/n) ')
-    if best_start.lower() == 'y':
-        play(optimal_guess=True)
-    else:
-        play(optimal_guess=False)
+    ask_mode_then_play()
